@@ -2,7 +2,7 @@
 import uuid
 import psycopg2
 from fastapi import FastAPI, WebSocket, BackgroundTasks, WebSocketDisconnect, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List
 
 app = FastAPI(
@@ -11,10 +11,10 @@ app = FastAPI(
 )
 # Order schema
 class Order(BaseModel):
-    symbol: str
-    price: float
-    quantity: int
-    order_type: str
+    symbol: str = Field(..., min_length=1, max_length=10, regex="^[A-Z]+$")
+    price: float = Field(..., gt=0, description="Price must be greater than zero")
+    quantity: int = Field(..., gt=0, description="Quantity must be greater than zero")
+    order_type: str = Field(..., regex="^(buy|sell)$", description="Order type must be 'buy' or 'sell'")
 
 clients: List[WebSocket] = []
 
@@ -33,6 +33,7 @@ def get_connection():
         password="Blockhouse",
         port=5432
     )
+    
 
 def init_db():
     conn = get_connection()
@@ -60,6 +61,7 @@ def create_order(
     order_type: str = Query(..., description="Order type"), 
     background_tasks: BackgroundTasks = BackgroundTasks()
 ):
+    try(
     order = Order(symbol=symbol, price=price, quantity=quantity, order_type=order_type)
     order_id = str(uuid.uuid4())
     conn = get_connection()
@@ -74,7 +76,9 @@ def create_order(
     background_tasks.add_task(
         broadcast_message, f"New order created: {order_id} for {order.symbol}"
     )
-    return {"id": order_id, **order.model_dump()}
+    return {"id": order_id, **order.model_dump()})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @app.get("/Submitted_Orders", summary="List all submitted orders", response_model=List[dict])
 def list_orders():
