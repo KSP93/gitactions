@@ -1,11 +1,14 @@
 import os
 import psycopg2
+import pytest
 
+@pytest.mark.database
 def test_database_connection():
-    DB_HOST = os.getenv("DB_HOST", "3.94.10.52")
-    DB_NAME = os.getenv("DB_NAME", "Orders")
+    """Test database connection with environment variables."""
+    DB_HOST = os.getenv("DB_HOST", "localhost")
+    DB_NAME = os.getenv("DB_NAME", "orders_db")
     DB_USER = os.getenv("DB_USER", "postgres")
-    DB_PASS = os.getenv("DB_PASS", "Blockhouse")
+    DB_PASS = os.getenv("DB_PASS", "password")
     DB_PORT = os.getenv("DB_PORT", "5432")
 
     try:
@@ -18,5 +21,5 @@ def test_database_connection():
         )
         conn.close()
         assert True
-    except Exception:
-        assert False, "Database connection failed"
+    except Exception as e:
+        pytest.fail(f"Database connection failed: {e}")
