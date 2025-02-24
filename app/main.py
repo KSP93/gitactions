@@ -9,7 +9,7 @@ app = FastAPI(
     title="Trade Orders API",
     description="API for submitting and listing trade orders using PostgreSQL for data storage."
 )
-
+# Order schema
 class Order(BaseModel):
     symbol: str
     price: float
