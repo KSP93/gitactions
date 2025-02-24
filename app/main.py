@@ -65,6 +65,11 @@ def create_order(
 ):
     """Creates a trade order using query parameters instead of JSON."""
     try:
+
+        if price <= 0:
+            raise HTTPException(status_code=400, detail="Price must be greater than zero.")
+        if quantity <= 0:
+            raise HTTPException(status_code=400, detail="Quantity must be greater than zero.")
         # Validate input with Pydantic
         validated_order = Order(symbol=symbol, price=price, quantity=quantity, order_type=order_type)
 
