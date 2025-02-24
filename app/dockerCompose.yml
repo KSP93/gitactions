@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: orders_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    environment:
+      # Configure your database connection via environment variables
+      DB_HOST: 3.94.10.52
+      DB_NAME: Orders
+      DB_USER: postgres
+      DB_PASS: Blockhouse
+      DB_PORT: 5432
+
+volumes:
+  postgres_data:
