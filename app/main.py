@@ -2,7 +2,7 @@
 import uuid
 import psycopg2
 from fastapi import FastAPI, WebSocket, BackgroundTasks, WebSocketDisconnect, Query , HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, constr, confloat, conint, ValidationError
 from typing import List
 
 app = FastAPI(
