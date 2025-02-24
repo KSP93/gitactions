@@ -13,11 +13,10 @@ app = FastAPI(
 from pydantic import BaseModel, Field
 
 class Order(BaseModel):
-    symbol: str = Field(..., min_length=1, max_length=10, pattern="^[A-Z]+$")
-    price: float = Field(..., gt=0, description="Price must be greater than zero")
-    quantity: int = Field(..., gt=0, description="Quantity must be greater than zero")
-    order_type: str = Field(..., pattern="^(buy|sell)$", description="Order type must be 'buy' or 'sell'")
-
+    symbol: constr(min_length=1, max_length=10, pattern="^[A-Z]+$") = Field(..., description="Stock symbol (e.g., AAPL)")
+    price: confloat(gt=0) = Field(..., description="Price must be greater than zero")
+    quantity: conint(gt=0) = Field(..., description="Quantity must be greater than zero")
+    order_type: constr(pattern="^(buy|sell)$") = Field(..., description="Order type must be 'buy' or 'sell'")
 
 clients: List[WebSocket] = []
 
@@ -58,28 +57,45 @@ init_db()
 
 @app.post("/orders", summary="Submit a new trade order")
 def create_order(
-    symbol: str = Query(..., description="Order symbol"),
-    price: float = Query(..., description="Order price"),
-    quantity: int = Query(..., description="Order quantity"),
-    order_type: str = Query(..., description="Order type"), 
+    symbol: str = Query(..., description="Stock symbol (e.g., AAPL)"),
+    price: float = Query(..., gt=0, description="Price must be greater than 0"),
+    quantity: int = Query(..., gt=0, description="Quantity must be greater than 0"),
+    order_type: str = Query(..., pattern="^(buy|sell)$", description="Order type must be 'buy' or 'sell'"),
     background_tasks: BackgroundTasks = BackgroundTasks()
 ):
+    """Creates a trade order using query parameters instead of JSON."""
     try:
-        order = Order(symbol=symbol, price=price, quantity=quantity, order_type=order_type)
+        # Validate input with Pydantic
+        validated_order = Order(symbol=symbol, price=price, quantity=quantity, order_type=order_type)
+
         order_id = str(uuid.uuid4())
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO orders (id, symbol, price, quantity, order_type)
             VALUES (%s, %s, %s, %s, %s)
-        """, (order_id, order.symbol, order.price, order.quantity, order.order_type))
+        """, (order_id, validated_order.symbol, validated_order.price, validated_order.quantity, validated_order.order_type))
         conn.commit()
         cursor.close()
         conn.close()
+
+        # Notify clients via WebSocket
         background_tasks.add_task(
-            broadcast_message, f"New order created: {order_id} for {order.symbol}"
+            broadcast_message, f"New order created: {order_id} for {validated_order.symbol}"
         )
-        return {"id": order_id, **order.model_dump()}
+
+        return {
+            "id": order_id,
+            "symbol": validated_order.symbol,
+            "price": validated_order.price,
+            "quantity": validated_order.quantity,
+            "order_type": validated_order.order_type
+        }
+
+    except ValidationError as e:
+        # Explicitly return 422 if validation fails
+        raise HTTPException(status_code=422, detail=e.errors())
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
