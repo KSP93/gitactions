@@ -5,7 +5,7 @@ import pytest
 @pytest.mark.asyncio
 async def test_websocket():
     """Test WebSocket connection and message transmission."""
-    uri = "ws://localhost:8000/ws"
+    uri = "ws://localhost:8080/ws"
     
     try:
         async with websockets.connect(uri) as websocket:
