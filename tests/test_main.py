@@ -16,6 +16,6 @@ def test_create_order():
     assert data["order_type"] == "buy"
 
 def test_get_orders():
-    response = client.get("/orders")
+    response = client.get("/Submitted_Orders")
     assert response.status_code == 200
     assert isinstance(response.json(), list)

@@ -74,7 +74,7 @@ def create_order(
     background_tasks.add_task(
         broadcast_message, f"New order created: {order_id} for {order.symbol}"
     )
-    return {"id": order_id, **order.dict()}
+    return {"id": order_id, **order.model_dump()}
 
 @app.get("/Submitted_Orders", summary="List all submitted orders", response_model=List[dict])
 def list_orders():
