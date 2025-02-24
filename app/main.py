@@ -10,11 +10,14 @@ app = FastAPI(
     description="API for submitting and listing trade orders using PostgreSQL for data storage."
 )
 # Order schema
+from pydantic import BaseModel, Field
+
 class Order(BaseModel):
-    symbol: str = Field(..., min_length=1, max_length=10, regex="^[A-Z]+$")
+    symbol: str = Field(..., min_length=1, max_length=10, pattern="^[A-Z]+$")
     price: float = Field(..., gt=0, description="Price must be greater than zero")
     quantity: int = Field(..., gt=0, description="Quantity must be greater than zero")
-    order_type: str = Field(..., regex="^(buy|sell)$", description="Order type must be 'buy' or 'sell'")
+    order_type: str = Field(..., pattern="^(buy|sell)$", description="Order type must be 'buy' or 'sell'")
+
 
 clients: List[WebSocket] = []
 
