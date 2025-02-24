@@ -36,7 +36,7 @@ jobs:
           PYTHONPATH=./app pytest tests/ -v
 
       - name: Build Docker Image
-        run: docker build -t trade-orders-app .
+        run: docker build -t trade-orders-app -f app/Dockerfile .
 
   deploy:
     needs: build
