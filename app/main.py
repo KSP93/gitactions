@@ -1,7 +1,7 @@
 
 import uuid
 import psycopg2
-from fastapi import FastAPI, WebSocket, BackgroundTasks, WebSocketDisconnect, Query
+from fastapi import FastAPI, WebSocket, BackgroundTasks, WebSocketDisconnect, Query , HTTPException
 from pydantic import BaseModel, Field
 from typing import List
 
