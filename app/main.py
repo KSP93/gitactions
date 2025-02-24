@@ -61,22 +61,22 @@ def create_order(
     order_type: str = Query(..., description="Order type"), 
     background_tasks: BackgroundTasks = BackgroundTasks()
 ):
-    try(
-    order = Order(symbol=symbol, price=price, quantity=quantity, order_type=order_type)
-    order_id = str(uuid.uuid4())
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO orders (id, symbol, price, quantity, order_type)
-        VALUES (%s, %s, %s, %s, %s)
-    """, (order_id, order.symbol, order.price, order.quantity, order.order_type))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    background_tasks.add_task(
-        broadcast_message, f"New order created: {order_id} for {order.symbol}"
-    )
-    return {"id": order_id, **order.model_dump()})
+    try:
+        order = Order(symbol=symbol, price=price, quantity=quantity, order_type=order_type)
+        order_id = str(uuid.uuid4())
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO orders (id, symbol, price, quantity, order_type)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (order_id, order.symbol, order.price, order.quantity, order.order_type))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        background_tasks.add_task(
+            broadcast_message, f"New order created: {order_id} for {order.symbol}"
+        )
+        return {"id": order_id, **order.model_dump()}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
