@@ -26,7 +26,7 @@ jobs:
 
       - name: Start FastAPI Server
         run: |
-          uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload &
+          uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload &
       
       - name: Wait for Server to Start
         run: sleep 5  # Ensure FastAPI has time to start
